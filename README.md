@@ -1,4 +1,9 @@
 # Voice Recognition V3 **(WIP)**
+
+## Note
+This repostory is a fork of [VoiceRecognitionV3](https://github.com/elechouse/VoiceRecognitionV3), and adapted for using a ESP32 device programmed in the PlatformIO IDE. The original code is for Arduino, and the original README is kept for reference, but may not be fully applicable to this fork. Please refer to the code and comments for details on how to use this library with ESP32 and PlatformIO.
+
+
 [START]: #voice-recognition-v3-wip
 
 ## Feature
