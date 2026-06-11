@@ -1,132 +1,143 @@
-# Voice Recognition V3 
+# Spraakherkenning V3
 
-## Note
-This repository is a fork of [VoiceRecognitionV3](https://github.com/elechouse/VoiceRecognitionV3), and adapted for using a ESP32 device programmed in the PlatformIO IDE. The original code is for Arduino, and the original README is kept for reference, but may not be fully applicable to this fork. Please refer to the code and comments for details on how to use this library with ESP32 and PlatformIO.
+## Opmerking
+Dit repository is een fork van [VoiceRecognitionV3](https://github.com/elechouse/VoiceRecognitionV3), specifiek aangepast voor **ESP32** microcontroller geprogrammeerd in **[PlatformIO IDE][PlatformIO]**. 
 
+**Belangrijke verschillen van het origineel:**
+- Ontwikkeld en getest op **ESP32** (geen Arduino UNO)
+- Gebruikt **PlatformIO** voor project- en dependencybeheer
+- Bevat meerdere PlatformIO-projectvoorbeelden in aparte mappen
+- Seriële communicatie via UART2 (GPIO4/GPIO3) in plaats van SoftwareSerial
+- Aangepast voor het ESP32-ecosysteem
 
+De originele README is ter referentie behouden, maar raadpleeg deze pagina voor PlatformIO/ESP32-specifieke instructies.
 
-## Feature
-- Recognize maximum 7 voice commands at same time
-- Store maximum 255 records of voice
-- Group control and external group select pin
-- Auto load records when power on
-- Signature function, help to make out voice record
-- LED indicate
+## Kenmerken
+- Herken maximaal 7 spraakopdrachten tegelijkertijd
+- Sla maximaal 255 opnamen op
+- Groepsbeheer en externe groepsselectiepin
+- Automatisch laden van opnamen bij inschakelen
+- Handtekeningfunctie, helpt bij het identificeren van spraakopnamen
+- LED-indicatie
 
-## Introduce
+## Inleiding
 
-## Terminology
-- **recognizer** -- core part of voice recognition module
-- **recognizer index** -- Each VoiceRecognitionModule support 7 voice command, recognizer has 7 region for each voice command, one index corresponds to one region
-- **train** -- let VoiceRecognitionModule record your voice command
-- **load** -- copy trained voice to recognizer of VoiceRecognitionModule
-- **record** -- the trained voice command store in flash, number from 0 to 79
-- **signature** -- alias for **record**
-- **group** -- help to manage records, each group 7 **records**. System group and user group are supported.
+## Terminologie
+- **herkenner** -- kernonderdeel van de spraakherkenningsmodule
+- **herkenner-index** -- Elke spraakherkenningsmodule ondersteunt 7 spraakopdrachten; de herkenner heeft 7 regio's voor elke spraakopdracht; één index komt overeen met één regio
+- **trainen** -- laat de spraakherkenningsmodule uw spraakopdracht opnemen
+- **laden** -- kopieer getrainde spraak naar de herkenner van de spraakherkenningsmodule
+- **opname** -- de getrainde spraakopdracht opgeslagen in flash, genummerd van 0 tot 79
+- **handtekening** -- alias voor **opname**
+- **groep** -- helpt bij het beheren van opnamen; elke groep heeft 7 **opnamen**. Systeemgroep en gebruikersgroep worden ondersteund.
 
-## Quick Start
+## Snelstartgids
 
-### Prepare
-+ [Voice Recognition V3][VRV3] module
-+ [Arduino][Arduino] board ([UNO][UNO] recommended)
-+ [Arduino Sensor Shield V07][SensorShieldV7]
-+ [Arduino IDE][ArduinoIDE]
-+ Voice Recognition V3 library([Download zip file][dzip])
-+ [Access Port][accessport]
+### Voorbereiding
++ [Spraakherkenning V3][VRV3] module
++ [ESP32][ESP32] microcontroller bord
++ [PlatformIO IDE][PlatformIO] (of VS Code met PlatformIO extensie)
++ USB kabel voor verbinding met ESP32
++ [Access Port][accessport] (optioneel, voor seriële communicatie)
 
-[idtrain]: #train
-### Train
-1. Connect your Voice Recognition V3 Module with Arduino, By Default:  
-![connection](./image/connection.jpg)
+[idtrain]: #trainen
+### Trainen
+1. Verbind uw Spraakherkenning V3 module met ESP32, standaard:
+   - VR RX → ESP32 GPIO 3 (TX2)
+   - VR TX → ESP32 GPIO 4 (RX2)
+   - VR GND → ESP32 GND
+   - VR VCC → ESP32 5V
 
-1. Download VoiceRecognitionV3 library.(download [zip][dzip] file or use `git clone https://github.com/elechouse/VoiceRecognitionV3.git` command)
-1. When use zip format file, extract **VoiceRecognitionV3.zip** to `Arduino Sketch\libraries` folder, or if you use `git clone` command copy **VoiceRecognitionV3** to `Arduino Sketch\libraries` .
-1. Open **vr\_sample\_train**(File -> Examples -> VoiceRecognitionV3 -> vr\_sample\_train)
-1. Choose right Arduino board(Tool -> Board, UNO recommended), Choose right serial port.
-1. Click **Upload** button, wait until Arduino is uploaded.
-1. Open **Serial Monitor**. Set baud rate 115200, set send with **Newline** or **Both NL & CR**.  
-![sm](./image/serial_monitor.jpg)
+1. Clone of download deze repository naar uw lokale machine
+1. Open het **vr_sample_train** project in PlatformIO
+1. Configureer de seriële poort in `platformio.ini` als dat nodig is
+1. Klik op **Build** om het project te compileren en **Upload** om naar de ESP32 te flashen
+1. Open de **Seriële Monitor** in PlatformIO (Monitor knop). Stel baudrate in op 115200.
 
-1. Send command `settings`(case insensitive) to check Voice Recognition Module settings. Input `settings`, and hit `Enter` to send.  
-![input](./image/input_command.jpg)
-![input](./image/settings.jpg)
+1. Stuur opdracht `settings` (onafhankelijk van hoofdletters) om spraakherkenningsmodule-instellingen te controleren. Voer `settings` in en druk `Enter` om te verzenden.  
+![invoer](./image/input_command.jpg)
+![invoer](./image/settings.jpg)
 
-1. Train Voice Recognition Module. Send `sigtrain 0 On` command to train record 0 with signature "On". When Serial Monitor prints "Speak now", you need speak your voice(can be any word, meaningful word recommended, may be 'On' here), and when Serial Monitor prints "Speak again", you need repeat your voice again. If these two voice are matched, Serial Monitor prints "Success", and "record 0" is trained, or if are not matched, repeat speaking until success.  
-**When training, the two led on the Voice Recognition Module can benefit your training process. After send `train` command, the SYS_LED is blinking which remind you to be ready, then speak your voice as soon as the STATUS_LED lights on, the record finishes once when the STATUS_LED lights off. Then the SYS_LED is blinking again, these status repeated, when the training is successful, SYS_LED and STATUS_LED blink together, if training is failed SYS_LED and STATUS_LED blink together quickly.**  
+1. Trainen spraakherkenningsmodule. Stuur `sigtrain 0 On` opdracht om opname 0 te trainen met handtekening "On". Wanneer Seriële Monitor "Speak now" afdrukt, moet u uw stem spreken (kan elk woord zijn, zinvol woord aanbevolen, kan hier 'On' zijn), en wanneer Seriële Monitor "Speak again" afdrukt, moet u uw stem herhalen. Als deze twee stemmen overeenkomen, drukt Seriële Monitor "Success" af en wordt "opname 0" getraind, of als deze niet overeenkomen, herhaal spreken totdat het succesvol is.  
+**Tijdens het trainen kunnen de twee LED's op de spraakherkenningsmodule uw trainingsproces helpen. Na verzending van `train` opdracht, knippert SYS_LED wat aangeeft dat u klaar moet zijn, spreek dan uw stem zodra STATUS_LED brandt, de opname eindigt zodra STATUS_LED uit gaat. Dan knippert SYS_LED weer, deze status herhaald zich, wanneer het trainen succesvol is, knipperen SYS_LED en STATUS_LED samen, als trainen mislukt knipperen SYS_LED en STATUS_LED snel samen.**  
 ![sigtrain](./image/sigtrain_0_on.jpg)  
 
-1. Train another record. Send `sigtrain 1 Off` command to train record 1 with signature "Off". Choose your favorite words to train (it can be any word, meaningful word recommended, may be 'Off' here).  
+1. Trainen een ander opname. Stuur `sigtrain 1 Off` opdracht om opname 1 te trainen met handtekening "Off". Kies uw favoriete woorden om te trainen (het kan elk woord zijn, zinvol woord aanbevolen, kan hier 'Off' zijn).  
 ![sigtrain](./image/sigtrain_1_off.jpg)
 
-1. Send `load 0 1` command to load voice. And say your word to see if the Voice Recognition Module can recognize your words.  
-![load](./image/load_0_1.jpg)
+1. Stuur `load 0 1` opdracht om spraak te laden. En zeg uw woord om te zien of de spraakherkenningsmodule uw woorden kan herkennen.  
+![laden](./image/load_0_1.jpg)
 
-	If the voice is recognized, you can see.  
+	Als de stem wordt herkend, kunt u zien.  
 	![vr](./image/recognize.jpg)
-1. Train finish. Train sample also support several other commands.  
+1. Trainen voltooid. Train voorbeeld ondersteunt ook verschillende andere opdrachten.  
 ![cmd](./image/train_command.jpg)
 
-### Application
-[controlled]: #control-led-sample
-#### Control LED Sample
-1. Open **vr\_sample\_control\_led**(File -> Examples -> VoiceRecognitionV3 -> vr\_sample\_control\_led)
-1. Choose right Arduino board(Tool -> Board, UNO recommended), Choose right serial port.
-1. Click **Upload** button, wait until Arduino is uploaded.
-1. Open **Serial Monitor**. Set baud rate 115200.
-1. Say your trained voice to control the LED on Arduino UNO board. When record 0 is recognized, the led turns on. When record 1 is recognized, the led turns off.  
+### Toepassing
+[controlled]: #led-voorbeeld-besturen
+#### LED-voorbeeld besturen
+1. Open het **vr_sample_control_led** project in PlatformIO
+1. Verbind uw ESP32 met de computer via USB
+1. Klik op **Build** om te compileren en **Upload** om naar ESP32 te flashen
+1. Open de **Seriële Monitor** (Monitor knop in PlatformIO). Stel baudrate in op 115200.
+1. Zeg uw getrainde stem om de LED op de ESP32 te besturen. Wanneer opname 0 wordt herkend, gaat de LED aan. Wanneer opname 1 wordt herkend, gaat de LED uit.  
 ![control_led](./image/control_led.jpg)
-1. Control led finish.
+1. LED-besturing voltooid.
 
-## Examples
+## Projectstructuur
+Deze repository bevat meerdere PlatformIO-projecten:
+- **vr_sample_train** - Trainingsapplicatie voor het opnemen van spraakopdrachten
+- **vr_sample_control_led** - Voorbeeld voor LED-besturing via spraakherkenning
+- **vr_sample_bridge** - Bridge-applicatie voor directe communicatie met de module
+- **vr_sample_multi_cmd** - Voorbeeld met meerdere spraakopdrachten
+- **vr_sample_check_baud_rate** - Hulpapplicatie voor baudrate configuratie
 ### vr\_sample\_train
-See [Train][idtrain] for more information.
+Zie [Trainen][idtrain] voor meer informatie.
 
 ### vr\_sample\_control\_led
-See [Control LED][controlled] for more information.
+Zie [LED besturen][controlled] voor meer informatie.
 
-### vr\_sample\_bridge
-Use this sample to know the command of VoiceRecognition Module. Details about command, see [Protocol][Protocol] . You must do not input **Frame Head**, **Frame Length**, **Frame End**, only need input **Frame Command** and **Frame Data**. For example, Check Recognizer Command is "AA 02 01 0A" for all, here you only need input 01.
+### vr_sample_bridge
+Gebruik dit voorbeeld om de opdrachtset van de Spraakherkenningsmodule te kennen. Voor details, zie [Protocol][Protocol]. U hoeft alleen **Frame Command** en **Frame Data** in te voeren, niet **Frame Head**, **Frame Length**, **Frame End**.
 
-Example:
+Voor configuratie in PlatformIO:
+1. Open het **vr_sample_bridge** project
+2. Build en upload naar ESP32
+3. Open PlatformIO Monitor en stel baudrate in op 115200
 
-1. Enable Arduino Serial monitor "Send with newline" feture, Baud rate 115200.
-2. Input "01" to "check recognizer".
-3. input "31" to "clear recognizer"
-4. input "30 00 02 04" to "load record 0, record 2, record 4"
-
-![bridge](./image/bridge-0.jpg)
-![bridge](./image/bridge-1.jpg)
+Voorbeeld van verzendingen:
+- "01" - Herkenner controleren
+- "31" - Herkenner wissen
+- "30 00 02 04" - Opnamen 0, 2, 4 laden
 
 ### vr\_sample\_multi\_cmd
-This sample shows how to use multi commands(Break 7 voice command limits),this sample use **RECORD 0** to switch between the 2 command 'groups'(not Voice Recognition Group Function), first group is made up of *record 0, 1, 2, 3, 4, 5, 6,** and second group is made up of **record 0, 7, 8, 9, 10, 11, 12** .
+Dit voorbeeld toont hoe u meerdere opdrachten kunt gebruiken (Verbreek de limiet van 7 spraakopdrachten). Dit voorbeeld gebruikt **OPNAME 0** om tussen de 2 opdrachtgroepen te schakelen (niet spraakherkenningsgroepfunctie), eerste groep bestaat uit *opname 0, 1, 2, 3, 4, 5, 6,** en tweede groep bestaat uit **opname 0, 7, 8, 9, 10, 11, 12**.
 
-***Note: Before start this sample, you need train your Voice Recognition module first, and make sure that all records from 0 to 12 should be trained.***
+***Opmerking: Voordat u dit voorbeeld start, moet u eerst uw spraakherkenningsmodule trainen, en zorg ervoor dat alle opnamen van 0 tot 12 zijn getraind.***
 
-### vr\_sample\_check\_baud\_rate
-This sample is used to check the baud rate, when you forgot your custom settings. 
-
-![bridge](./image/check_br.jpg)
+### vr_sample_check_baud_rate
+Dit voorbeeld helpt u de baudrate van de Spraakherkenningsmodule te controleren als u uw aangepaste instellingen bent vergeten. Build, upload naar ESP32 en controleer de uitvoer in PlatformIO Monitor.
 
 
 [Protocol]: #protocol
 ## Protocol
-The simplest way to play the Voice Recognition V3 module is to use this VoiceRecognition Arduino library. But for many **hackers**, this is far from enough, so we supply this protocol by which user can communicate with the Voice Recognition V3 module.
+De eenvoudigste manier om met de Spraakherkennings V3 module te werken is het gebruik van deze VoiceRecognition bibliotheek. Voor verdere aanpassingen en directe communicatie, volgt hier het protocoldetails waarmee u rechtstreeks met de Spraakherkennings V3 module kunt communiceren via de seriële interface.
 
-### Base Format
+### Basisindeling
 
-#### Control
-**| Head (0AAH) | Length| Command | Data | End (0AH) |**  
+#### Controle
+**| Head (0AAH) | Length | Command | Data | End (0AH) |**  
 Length = L(Length + Command + Data)
 
-#### Return
-**| Head (0AAH) | Length| Command | Data | End (0AH) |**  
+#### Retournering
+**| Head (0AAH) | Length | Command | Data | End (0AH) |**  
 Length = L(Length + Command + Data)
 
-NOTE: Data area is different with different with commands.
+OPMERKING: Gegevensgebied verschilt per opdracht.
 
 ### Code
 [index]: #code
-***ALL CODE ARE IN HEXADECIMAL FORMAT***
+***ALLE CODE ZIJN IN HEXADECIMAAL FORMAAT***
 
 ---  
 ***FRAME CODE***  
@@ -134,134 +145,134 @@ NOTE: Data area is different with different with commands.
 **0A** --> Frame End  
 
 ---
-***CHECK***  
-**00** --> [Check System Settings][id00]  
-**01** --> [Check Recognizer][id01]  
-**02** --> [Check Record Train Status][id02]  
-**03** --> [Check Signature of One Record][id03]
+***CONTROLEREN***  
+**00** --> [Systeeminstellingen controleren][id00]  
+**01** --> [Herkenner controleren][id01]  
+**02** --> [Trainingsstatus van opname controleren][id02]  
+**03** --> [Handtekening van één opname controleren][id03]
 
 ---
-***SYSTEM SETTINGS***  
-**10** --> [Restore System Settings][id10]  
-**11** --> [Set Baud Rate][id11]  
-**12** --> [Set Output IO Mode][id12]  
-**13** --> [Set Output IO Pulse Width][id13]   
-**14** --> [Reset Output IO][id14]  
-**15** --> [Set Power On Auto Load][id15]   
+***SYSTEEMINSTELLINGEN***  
+**10** --> [Systeeminstellingen herstellen][id10]  
+**11** --> [Baudrate instellen][id11]  
+**12** --> [Output IO-modus instellen][id12]  
+**13** --> [Output IO-pulsbreedteinstelling][id13]   
+**14** --> [Output IO herstellen][id14]  
+**15** --> [Auto-laden bij inschakelen instellen][id15]   
 
 ---
-***RECORD OPERATION***  
-**20** --> [Train One Record or Records][id20]  
-**21** --> [Train One Record and Set Signature][id21]  
-**22** --> [Set Signature for Record][id22]  
+***OPNAMEBEWERKING***  
+**20** --> [Één opname of opnamen trainen][id20]  
+**21** --> [Één opname trainen en handtekening instellen][id21]  
+**22** --> [Handtekening voor opname instellen][id22]  
 
 ---
-***RECOGNIZER CONTROL***  
-**30** --> [Load a Record or Records to Recognizer][id30]  
-**31** --> [Clear Recognizer][id31]  
-**32** --> [Group Control][id32]
+***HERKENNERCONTROLE***  
+**30** --> [Een opname of opnamen naar herkenner laden][id30]  
+**31** --> [Herkenner wissen][id31]  
+**32** --> [Groepsbeheer][id32]
 
 ---
-***THESE 3 COMMANDS ARE ONLY USED FOR RETURN MESSAGE***  
+***DEZE 3 OPDRACHTEN WORDEN ALLEEN GEBRUIKT VOOR RETOURBERICHTEN***  
 **0A** --> [Prompt][id0a]  
-**0D** --> [Voice Recognized][id0d]  
-**FF** --> [Error][idff]  
+**0D** --> [Spraak herkend][id0d]  
+**FF** --> [Fout][idff]  
 
 ### Details
 
-[id00]: #check-system-settings-00
-#### Check System Settings (00)
-Use "Check System Settings" command to check current settings of Voice Recognition Module, include serial baud rate, output IO mode, output IO pulse width, auto load and group function.  
-**Format:**  
+[id00]: #systeeminstellingen-controleren-00
+#### Systeeminstellingen controleren (00)
+Gebruik de opdracht "Systeeminstellingen controleren" om huidige instellingen van de spraakherkenningsmodule te controleren, inclusief seriële baudrate, output IO-modus, output IO-pulsbreedteinstelling, auto-laden en groepsfunctie.  
+**Indeling:**  
 | AA | 02 | 00 | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 08 | 00 | STA | BR | IOM | IOPW | AL | GRP | 0A |  
-**STA** : Trained status (0-untrained 1-trained FF-record value out of range)  
-**BR**: Baud rate (0,3-9600 1-2400 2-4800 4-19200 5-38400)  
-**IOM**: Outpu IO Mode (0-Pulse 1-Toggle 2-Clear 3-Set)  
-**IOPW**: Outpu IO Pulse Width(Pulse Mode) (1~15)  
-**AL**: Power on auto load (0-disable 1-enable)  
-**GRP**: Group control by external IO (0-disable 1-system group 2-user group)
+**STA** : Trainingsstatus (0-ongetraind 1-getraind FF-opname waarde buiten bereik)  
+**BR**: Baudrate (0,3-9600 1-2400 2-4800 4-19200 5-38400)  
+**IOM**: Output IO Mode (0-Pulse 1-Toggle 2-Clear 3-Set)  
+**IOPW**: Output IO Pulsbreedteinstelling (Pulse Mode) (1~15)  
+**AL**: Auto-laden bij inschakelen (0-uitgeschakeld 1-ingeschakeld)  
+**GRP**: Groepsbeheer via externe IO (0-uitgeschakeld 1-systeemgroep 2-gebruikersgroep)
 
-[Back to index][index]
-[id01]: #check-recognizer-01
-#### Check Recognizer (01)
-Use "Check Recognizer" command to check **recognizer** of Voice Recognition Module.  
-**Format:**  
+[Terug naar index][index]
+[id01]: #herkenner-controleren-01
+#### Herkenner controleren (01)
+Gebruik de opdracht "Herkenner controleren" om **herkenner** van de spraakherkenningsmodule te controleren.  
+**Indeling:**  
 | AA | 02 | 01 | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 0D | 01 | RVN | VRI0 | VRI1 | VRI2 | VRI3 | VRI4 | VRI5 | VRI6 | RTN | VRMAP | GRPM | 0A |  
-**RVN**: number of valid records in recognizer. (MAX 7)  
-**VRIn**(n=0~6): Record which is in recognizer, n is recognizer index value  
-**RTN**: number of total records in recognizer.  
-**VRMAP**: valid record bit map for VRI0~VRI6.  
-**GRPM**: group mode indicate. (FF-not in group mode 00~0A-system group 80~87-user group mode)  
+**RVN**: aantal geldige opnamen in herkenner. (MAX 7)  
+**VRIn**(n=0~6): Opname die zich in herkenner bevindt; n is waarde van herkenner-index  
+**RTN**: aantal totale opnamen in herkenner.  
+**VRMAP**: geldige opnamebitmap voor VRI0~VRI6.  
+**GRPM**: groepsmodus-indicator. (FF-niet in groepsmodus 00~0A-systeemgroep 80~87-gebruikersgroepsmodus)  
 
-[Back to index][index]
-[id02]: #check-record-train-status-02
-#### Check Record Train Status (02)
-Use "Check Record Train Status" command to check if the record is trained.  
-**Format:**  
-*Check all records*  
-| AA | 03 | 02 | FF| 0A |  
-*Check specified records*  
+[Terug naar index][index]
+[id02]: #trainingsstatus-van-opname-controleren-02
+#### Trainingsstatus van opname controleren (02)
+Gebruik de opdracht "Trainingsstatus van opname controleren" om te controleren of de opname is getraind.  
+**Indeling:**  
+*Alle opnamen controleren*  
+| AA | 03 | 02 | FF | 0A |  
+*Specifieke opnamen controleren*  
 | AA | 03+n | 02 | R0 | ... | Rn | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 5+2*n | 02 | N | R0 | STA | ... | Rn | STA | 0A |  
-**N**: number of trained records.  
-**R0 ~ Rn**: record.  
-**STA** : trained status (0-untrained 1-trained FF-record value out of range)  
+**N**: aantal getrainde opnamen.  
+**R0 ~ Rn**: opname.  
+**STA** : trainingsstatus (0-ongetraind 1-getraind FF-opname waarde buiten bereik)  
 
 
-[Back to index][index]
-[id03]: #check-signature-of-one-record-03
-#### Check Signature of One Record (03)
-Use this command to check the signature of one record.  
-**Format:**  
+[Terug naar index][index]
+[id03]: #handtekening-van-één-opname-controleren-03
+#### Handtekening van één opname controleren (03)
+Gebruik deze opdracht om de handtekening van één opname te controleren.  
+**Indeling:**  
 | AA | 03 | 03 | Record | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 03 | 03 | Record | SIGLEN | SIGNATURE | 0A |  
-**SIGLEN**: signature string length  
-**SIGNATURE**: signature string
+**SIGLEN**: lengte van handtekeningsstring  
+**SIGNATURE**: handtekeningsstring
 
-[Back to index][index]
-[id10]: #restore-system-settings-10
-#### Restore System Settings (10)
-Use this command to restore settings of Voice Recognition Module to default.  
-**Format:**  
+[Terug naar index][index]
+[id10]: #systeeminstellingen-herstellen-10
+#### Systeeminstellingen herstellen (10)
+Gebruik deze opdracht om instellingen van de spraakherkenningsmodule naar standaard te herstellen.  
+**Indeling:**  
 | AA | 02 | 10 | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 03 | 10 | 00 | 0A |  
 
-[Back to index][index]
-[id11]: #set-baud-rate-11
-#### Set Baud Rate (11)
-Use this command to set baud rate of Voice Recognition Module, effect after  Voice Recognition Module is restarted.  
-**Format:**  
+[Terug naar index][index]
+[id11]: #baudrate-instellen-11
+#### Baudrate instellen (11)
+Gebruik deze opdracht om baudrate van de spraakherkenningsmodule in te stellen; werkt na herstart van de spraakherkenningsmodule.  
+**Indeling:**  
 | AA | 03 | 11 | BR | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 03 | 11 | 00 | 0A |  
-**BR**: Serial baud rate.(0-9600 1-2400 2-4800 3-9600 4-19200 5-38400)  
+**BR**: Seriële baudrate. (0-9600 1-2400 2-4800 3-9600 4-19200 5-38400)  
 
-[Back to index][index]
-[id12]: #set-output-io-mode-12
-#### Set Output IO Mode (12)
-Use this command to set output IO mode of Voice Recognition Module, take effect immediately after the instruction execution.  
-**Format:**  
+[Terug naar index][index]
+[id12]: #output-io-modus-instellen-12
+#### Output IO-modus instellen (12)
+Gebruik deze opdracht om output IO-modus van de spraakherkenningsmodule in te stellen; werkt onmiddellijk na uitvoering van de instructie.  
+**Indeling:**  
 | AA | 03 | 12 | MODE | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 03 | 12 | 00 | 0A |  
-**MODE**: Output IO mode.(0-pulse mode 1-Toggle 2-Set 3-Clear)  
+**MODE**: Output IO-modus. (0-pulsmode 1-Toggle 2-Set 3-Clear)  
 
-[Back to index][index]
-[id13]: #set-output-io-pulse-width-13
-#### Set Output IO Pulse Width (13)
-Use this command to set output IO pulse width of Voice Recognition Module, take effect immediately after the instruction execution. Pulse width is used when output IO mode is **"Pulse"**.  
-**Format:**  
+[Terug naar index][index]
+[id13]: #output-io-pulsbreedteinstelling-13
+#### Output IO-pulsbreedteinstelling (13)
+Gebruik deze opdracht om output IO-pulsbreedteinstelling van de spraakherkenningsmodule in te stellen; werkt onmiddellijk na uitvoering van de instructie. Pulsbreedteinstelling wordt gebruikt wanneer output IO-modus is **"Pulse"**.  
+**Indeling:**  
 | AA | 03 | 13 | LEVEL | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 03 | 13 | 00 | 0A |  
-**LEVEL**: pulse width level. Details:
+**LEVEL**: pulsbreedteniveau. Details:
 
 	- 00            10ms
 	- 01 	 		15ms
@@ -280,192 +291,192 @@ Use this command to set output IO pulse width of Voice Recognition Module, take 
 	- 0E 	 		500ms
 	- 0F            1s
 
-[Back to index][index]
-[id14]: #reset-output-io-14
-#### Reset Output IO (14)
-Use this command to reset output IO. This command can be used in output IO set/clear mode to generate a user-defined pulse.  
-**Format:**  
-| AA| 03 | 14 | FF | 0A |  (reset all output io)  
-| AA| 03+n | 14 | IO0 | ... | IOn | 0A |  (reset output ios)  
-**Return:**  
+[Terug naar index][index]
+[id14]: #output-io-herstellen-14
+#### Output IO herstellen (14)
+Gebruik deze opdracht om output IO te herstellen. Deze opdracht kan worden gebruikt in output IO set/clear-modus om een door gebruiker gedefinieerde puls te genereren.  
+**Indeling:**  
+| AA | 03 | 14 | FF | 0A |  (alle output io herstellen)  
+| AA | 03+n | 14 | IO0 | ... | IOn | 0A |  (output ios herstellen)  
+**Retournering:**  
 | AA | 03 | 14 | 00 | 0A |  
-**IOn**: number of output io  
+**IOn**: nummer van output io  
 
-[Back to index][index]
-[id15]: #set-power-on-auto-load-15
-#### Set Power On Auto Load (15)
-Use this command to enable or disable "Power On Auto Load" function.  
-**Format:**  
-| AA| 03 | 15 | 00 | 0A |  (disable auto load)  
-| AA| 03+n | 15 | BITMAP | R0 | ... | Rn | 0A | (set auto load)  
-**Return:**  
-| AA| 04+n | 15 | 00 |BITMAP | R0 | ... | Rn | 0A | (set auto load)  
-**BITMAP**: Record bitmap.( **0**-zero record, disable auto load **01**-one record **03**-two records **07**-three records **0F**-four records **1F**-five records **3F**-six record **7F**-seven records )  
-**R0~Rn**: Record  
+[Terug naar index][index]
+[id15]: #auto-laden-bij-inschakelen-instellen-15
+#### Auto-laden bij inschakelen instellen (15)
+Gebruik deze opdracht om "Auto-laden bij inschakelen" functie in te schakelen of uit te schakelen.  
+**Indeling:**  
+| AA | 03 | 15 | 00 | 0A |  (auto-laden uitschakelen)  
+| AA | 03+n | 15 | BITMAP | R0 | ... | Rn | 0A | (auto-laden instellen)  
+**Retournering:**  
+| AA | 04+n | 15 | 00 | BITMAP | R0 | ... | Rn | 0A | (auto-laden instellen retournering)  
+**BITMAP**: Opname-bitmap. ( **0**-nul opname, auto-laden uitschakelen **01**-één opname **03**-twee opnamen **07**-drie opnamen **0F**-vier opnamen **1F**-vijf opnamen **3F**-zes opnamen **7F**-zeven opnamen)  
+**R0~Rn**: Opname  
 
-[Back to index][index]
-[id20]: #train-one-record-or-records-20
-#### Train One Record or Records (20)
-Train records, can train several records one time.  
-**Format:**  
-| AA| 03+n | 20 | R0 | ... | Rn | 0A |   
-**Return:**  
-| AA| LEN | 0A | RECORD | PROMPT | 0A |  
-| AA| 05+2*n | 20 | N | R0 | STA0 | ... | Rn | STAn | SIG | 0A |  
-**SIG**: signature string  
-**PROMPT**: prompt string  
-**Rn**: Record  
-**STA**: train result(0-Success 1-Timeout 2-Record value out of range)  
-**N**: number of train success  
+[Terug naar index][index]
+[id20]: #één-opname-of-opnamen-trainen-20
+#### Één opname of opnamen trainen (20)
+Train opnamen; kunt verschillende opnamen tegelijk trainen.  
+**Indeling:**  
+| AA | 03+n | 20 | R0 | ... | Rn | 0A |   
+**Retournering:**  
+| AA | LEN | 0A | RECORD | PROMPT | 0A |  
+| AA | 05+2*n | 20 | N | R0 | STA0 | ... | Rn | STAn | SIG | 0A |  
+**SIG**: handtekeningsstring  
+**PROMPT**: prompt-string  
+**Rn**: Opname  
+**STA**: trainingsresultaat (0-Succes 1-Timeout 2-Opname waarde buiten bereik)  
+**N**: aantal succesvol getrainde  
 
-[Back to index][index]
-[id21]: #train-one-record-and-set-signature-21
-#### Train One Record and Set Signature (21)
-Train one record and set a signature for it, one record one time.  
-**Format:**  
-| AA| 03+SIGLEN | 21 | RECORD | SIG | 0A |  (Set signature)  
-**Return:**  
-| AA| LEN | 0A | RECORD | PROMPT | 0A |  (train prompt)  
-| AA| 05+SIGLEN | 21 | N | RECORD | STA | SIG | 0A |  
-**SIG**: signature string  
-**PROMPT**: prompt string  
-**STA**: train result(0-Success 1-Timeout 2-Record value out of range)  
-**N**: number of train success  
+[Terug naar index][index]
+[id21]: #één-opname-trainen-en-handtekening-instellen-21
+#### Één opname trainen en handtekening instellen (21)
+Train één opname en stel een handtekening ervoor in; één opname tegelijk.  
+**Indeling:**  
+| AA | 03+SIGLEN | 21 | RECORD | SIG | 0A |  (Handtekening instellen)  
+**Retournering:**  
+| AA | LEN | 0A | RECORD | PROMPT | 0A |  (trainings prompt)  
+| AA | 05+SIGLEN | 21 | N | RECORD | STA | SIG | 0A |  
+**SIG**: handtekeningsstring  
+**PROMPT**: prompt-string  
+**STA**: trainingsresultaat (0-Succes 1-Timeout 2-Opname waarde buiten bereik)  
+**N**: aantal succesvol getrainde  
 
-[Back to index][index]
-[id22]: #set-signature-for-record-22
-#### Set Signature for Record (22)
-Set a signature for a record, one record one time.  
-**Format:**  
-| AA | 03+SIGLEN | 22 | RECORD | SIG | 0A |  (Set signature)  
-| AA | 03 | 22 | RECORD | 0A |  (Delete signature)  
-**Return:**  
-| AA | 04+SIGLEN | 22 | 00 | RECORD | SIG | 0A |  (Set signature return)  
-| AA | 04 | 22 | 00 | RECORD | 0A |  (Delete signature return)  
-**SIG**: signature string  
-**SIGLEN**: signature string length  
+[Terug naar index][index]
+[id22]: #handtekening-voor-opname-instellen-22
+#### Handtekening voor opname instellen (22)
+Stel een handtekening in voor een opname; één opname tegelijk.  
+**Indeling:**  
+| AA | 03+SIGLEN | 22 | RECORD | SIG | 0A |  (Handtekening instellen)  
+| AA | 03 | 22 | RECORD | 0A |  (Handtekening verwijderen)  
+**Retournering:**  
+| AA | 04+SIGLEN | 22 | 00 | RECORD | SIG | 0A |  (Handtekening instellen retournering)  
+| AA | 04 | 22 | 00 | RECORD | 0A |  (Handtekening verwijderen retournering)  
+**SIG**: handtekeningsstring  
+**SIGLEN**: lengte van handtekeningsstring  
 
-[Back to index][index]
-[id30]: #load-a-record-or-records-to-recognizer-30
-#### Load a Record or Records to Recognizer (30)
-Load records(1~7) to recognizer of Voice Recognition Module, after execution the Voice Recognition Module start to recognize immediately.  
-**Format:**  
-| AA| 2+n | 30 | R0 | ... | Rn | 0A |  
-**Return:**  
-| AA| 2+n | 30 | N | R0 | STA0 | ... | Rn | STAn | 0A |  
-N: number of loading successfully
-R0~Rn: Record
-STA0~STAn: Load result.(**0**-Success **FF**-Record value out of range **FE**-Record untrained **FD**-Recognizer full **FC**-Record already in recognizer)
+[Terug naar index][index]
+[id30]: #een-opname-of-opnamen-naar-herkenner-laden-30
+#### Een opname of opnamen naar herkenner laden (30)
+Laad opnamen (1~7) naar herkenner van de spraakherkenningsmodule; na uitvoering start de spraakherkenningsmodule onmiddellijk met herkennen.  
+**Indeling:**  
+| AA | 2+n | 30 | R0 | ... | Rn | 0A |  
+**Retournering:**  
+| AA | 2+n | 30 | N | R0 | STA0 | ... | Rn | STAn | 0A |  
+N: aantal succesvol geladen
+R0~Rn: Opname
+STA0~STAn: Laadresultaat. (**0**-Succes **FF**-Opname waarde buiten bereik **FE**-Opname ongetraind **FD**-Herkenner vol **FC**-Opname al in herkenner)
 
 
-[Back to index][index]
-[id31]: #clear-recognizer-31
-#### Clear Recognizer (31)
-Stop recognizing, and empty recognizer of Voice Recognition Module.
-**Format:**  
+[Terug naar index][index]
+[id31]: #herkenner-wissen-31
+#### Herkenner wissen (31)
+Stop met herkennen en maak herkenner van spraakherkenningsmodule leeg.
+**Indeling:**  
 | AA | 02 | 31 | 0A |  
-**Return:**  
+**Retournering:**  
 | AA | 03 | 31 | 00 | 0A |  
 
-[Back to index][index]
-[id32]: #group-control-32
-#### Group Control (32)
-##### Group select  
-Set group control mode(disable, system, user), if group control function is enabled(system or user), then voice recognition module is controlled by the external control IO.   
-**Format:**  
-| AA| 04 | 32 | 00 | MODE | 0A |  
-**MODE**: new group control mode. (00-disable 01-system 02-user FF-check)  
-**Return:**  
-| AA| 03 | 32 | 00 | 0A |  
-or  
-| AA| 05 | 32 | 00 | FF | MODE | 0A | (check command return)  
+[Terug naar index][index]
+[id32]: #groepsbeheer-32
+#### Groepsbeheer (32)
+##### Groepsselectie  
+Stel groepsbeheermodus in (uitschakelen, systeem, gebruiker); als groepsbeheerfunctie is ingeschakeld (systeem of gebruiker), wordt de spraakherkenningsmodule beheerd door de externe besturings-IO.   
+**Indeling:**  
+| AA | 04 | 32 | 00 | MODE | 0A |  
+**MODE**: nieuwe groepsbeheermodus. (00-uitschakelen 01-systeem 02-gebruiker FF-controleren)  
+**Retournering:**  
+| AA | 03 | 32 | 00 | 0A |  
+of  
+| AA | 05 | 32 | 00 | FF | MODE | 0A | (controleprogramma retournering)  
 
-##### Set user group
-Set user group content(record).  
-**Format:**  
-| AA| 03 | 32 | 01 | UGRP | 0A |  (Delete UGRP)  
-| AA| LEN | 32 | 01 | UGRP | R0 | ... | Rn | 0A |  (Set UGRP)  
-**UGRP**: user group number  
-**R0~Rn**: record index number (n=0,1,...,6)  
-**Return:**  
-| AA| 03 | 32 | 00 | 0A |  (Success return)
+##### Gebruikersgroep instellen
+Stel inhoud van gebruikersgroep in (opname).  
+**Indeling:**  
+| AA | 03 | 32 | 01 | UGRP | 0A |  (UGRP verwijderen)  
+| AA | LEN | 32 | 01 | UGRP | R0 | ... | Rn | 0A |  (UGRP instellen)  
+**UGRP**: gebruikersgroepnummer  
+**R0~Rn**: opname-indexnummer (n=0,1,...,6)  
+**Retournering:**  
+| AA | 03 | 32 | 00 | 0A |  (Succesvolle retournering)
 
-##### Load system group
-Load system group to recognizer, this command would clear recognizer.  
-**Format:**  
-| AA| 04 | 32 | 02 | SGRP | 0A |  
-**Return:**  
-| AA| 04 | 32 | SGRP | VRI0 | VRI1 | VRI2 | VRI3 | VRI4 | VRI5 | VRI6 | RTN | VRMAP | GRPM | 0A |  
-**SGRP**: System group number.  
-**VRIn**(n=0~6): Record which is in recognizer, n is recognizer index value  
-**RTN**: number of total records in recognizer.  
-**VRMAP**: valid record bit map for VRI0~VRI6.  
-**GRPM**: group mode indicate. (00~0A-system group)  
+##### Systeemgroep laden
+Laad systeemgroep naar herkenner; deze opdracht wist herkenner.  
+**Indeling:**  
+| AA | 04 | 32 | 02 | SGRP | 0A |  
+**Retournering:**  
+| AA | 04 | 32 | SGRP | VRI0 | VRI1 | VRI2 | VRI3 | VRI4 | VRI5 | VRI6 | RTN | VRMAP | GRPM | 0A |  
+**SGRP**: Systeemgroepnummer.  
+**VRIn**(n=0~6): Opname die zich in herkenner bevindt; n is waarde van herkenner-index  
+**RTN**: aantal totale opnamen in herkenner.  
+**VRMAP**: geldige opnamebitmap voor VRI0~VRI6.  
+**GRPM**: groepsmodus-indicator. (00~0A-systeemgroep)  
 
-##### Load user group
-Load user group to recognizer, this command would clear recognizer.  
-**Format:**  
-| AA| 04 | 32 | 03 | UGRP | 0A |  
-**Return:**  
-| AA| 04 | 32 | UGRP | VRI0 | VRI1 | VRI2 | VRI3 | VRI4 | VRI5 | VRI6 | RTN | VRMAP | GRPM |  | 0A |  
-**UGRP**: System group number.  
-**VRIn**(n=0~6): Record which is in recognizer, n is recognizer index value  
-**RTN**: number of total records in recognizer.  
-**VRMAP**: valid record bit map for VRI0~VRI6.  
-**GRPM**: group mode indicate. (00~0A-system group)  
-##### Check user group
-Check user group content.  
-**Format:**  
-| AA| 04 | 32 | 04 | 0A | (check all user group)  
-or  
-| AA| 04 | 32 | 04 | UGRP0| ... | UGRPn | 0A | (check user group)  
-**Return:**  
+##### Gebruikersgroep laden
+Laad gebruikersgroep naar herkenner; deze opdracht wist herkenner.  
+**Indeling:**  
+| AA | 04 | 32 | 03 | UGRP | 0A |  
+**Retournering:**  
+| AA | 04 | 32 | UGRP | VRI0 | VRI1 | VRI2 | VRI3 | VRI4 | VRI5 | VRI6 | RTN | VRMAP | GRPM | 0A |  
+**UGRP**: Systeemgroepnummer.  
+**VRIn**(n=0~6): Opname die zich in herkenner bevindt; n is waarde van herkenner-index  
+**RTN**: aantal totale opnamen in herkenner.  
+**VRMAP**: geldige opnamebitmap voor VRI0~VRI6.  
+**GRPM**: groepsmodus-indicator. (00~0A-systeemgroep)  
+##### Gebruikersgroep controleren
+Controleer inhoud van gebruikersgroep.  
+**Indeling:**  
+| AA | 04 | 32 | 04 | 0A | (alle gebruikersgroepen controleren)  
+of  
+| AA | 04 | 32 | 04 | UGRP0 | ... | UGRPn | 0A | (gebruikersgroep controleren)  
+**Retournering:**  
 | AA | 0A | 32 | UGRP | R0 | R1 | R2 | R3 | R4 | R5 | R6 | 0A |  
-**UGRP**: User group number.  
-**R0~R6**: Any record.  
+**UGRP**: Gebruikersgroepnummer.  
+**R0~R6**: Elke opname.  
 
-[Back to index][index]
+[Terug naar index][index]
 [id0a]: #prompt-0a
 #### Prompt (0A)
-**Prompt** command is only used for Voice Recognition Module to return data when user train voice command.   
-**Format:**  
-NONE  
-**Return:**  
+**Prompt** opdracht wordt alleen gebruikt voor spraakherkenningsmodule om gegevens terug te geven wanneer gebruiker spreekcommando traint.   
+**Indeling:**  
+GEEN  
+**Retournering:**  
 | AA | 07 | 0A | RECORD | PROMPT | 0A |  
-**RECORD**: record which is in training  
-**PROMPT**: prompt string  
+**RECORD**: opname die wordt getraind  
+**PROMPT**: prompt-string  
 
-[Back to index][index]
-[id0d]: #voice-recognized-0d
-#### Voice Recognized (0D)
-**Voice Recognized** command is only used for Voice Recognition Module to return data when voice is recognized.  
-**Format:**  
-NONE  
-**Return:**  
+[Terug naar index][index]
+[id0d]: #spraak-herkend-0d
+#### Spraak herkend (0D)
+**Spraak herkend** opdracht wordt alleen gebruikt voor spraakherkenningsmodule om gegevens terug te geven wanneer spraak wordt herkend.  
+**Indeling:**  
+GEEN  
+**Retournering:**  
 | AA | 07 | 0D | 00 | GRPM | R | RI | SIGLEN | SIG | 0A |  
-**GRPM**: group mode indicate. (FF-not in group mode 00~0A-system group mode 80~87-user group mode)  
-**R**: record which is recognized.  
-**RI**: recognizer index value for recognized record.  
-**SIGLEN**: signature length of the recognized record, 0 means on signature, on SIG area  
-**SIG**: signature content
+**GRPM**: groepsmodus-indicator. (FF-niet in groepsmodus 00~0A-systeemgroepsmodus 80~87-gebruikersgroepsmodus)  
+**R**: opname die wordt herkend.  
+**RI**: herkenner-indexwaarde voor herkende opname.  
+**SIGLEN**: lengte van handtekening van herkende opname; 0 betekent geen handtekening; geen SIG-gebied  
+**SIG**: inhoud van handtekening
 
-[Back to index][index]
-[idff]: #error-ff
-#### Error (FF)
-Error command is only used for Voice Recognition Module to return error status.  
-**Format:**  
-NONE  
-**Return:**  
+[Terug naar index][index]
+[idff]: #fout-ff
+#### Fout (FF)
+Fout opdracht wordt alleen gebruikt voor spraakherkenningsmodule om foutstatus terug te geven.  
+**Indeling:**  
+GEEN  
+**Retournering:**  
 | AA | 03 | FF | ECODE | 0A |  
 
-**ECODE**: error code (FF-command undefined FE-command length error FD-data error FC-subcommand error FB-command usage error)
+**ECODE**: foutcode (FF-opdracht ongedefinieerd FE-opdrachtlengtefout FD-gegevensfout FC-subopdracht fout FB-opdrachtgebruiksfout)
 
-[Back to index][index]
+[Terug naar index][index]
 
-## Library Reference
-See `VoiceRecognitionV3.cpp` or [libref.pdf][libref] to get more information.
+## Bibliotheekverwijzing
+Zie `VoiceRecognitionV3.cpp` of [libref.pdf][libref] voor meer informatie.
 
-## Buy ##
+## Kopen ##
 [![elechouse][EHICON]][EHLINK]
 
 
@@ -478,20 +489,13 @@ See `VoiceRecognitionV3.cpp` or [libref.pdf][libref] to get more information.
 
 [accessport]: http://www.sudt.com/en/ap/       "AccessPort"
 
-[ArduinoIDE]: http://arduino.cc/en/main/software "Arduino IDE"
+[PlatformIO]: https://platformio.org/ "PlatformIO IDE"
 
-[SensorShieldV7]: http://www.elechouse.com/elechouse/index.php?main_page=product_info&cPath=74&products_id=2211
-
-[UNO]: http://arduino.cc/en/Main/arduinoBoardUno
+[ESP32]: https://www.espressif.com/en/products/socs/esp32 "ESP32 Microcontroller"
 
 [VRV3]: http://www.elechouse.com/elechouse/index.php?main_page=product_info&cPath=&products_id=2254
-
-[Arduino]: http://arduino.cc/en/
-
-[dzip]: https://github.com/elechouse/VoiceRecognitionV3/archive/master.zip
 
 [libref]: https://github.com/elechouse/VoiceRecognitionV3/blob/master/libref.pdf?raw=true
 
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/elechouse/voicerecognitionv3/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
